@@ -6,6 +6,7 @@ import { ProductAttribute } from '../interfaces/productAttribute.interface';
 import { createProductCustomObject } from '../repository/Custom Object/createCustomObject.repository';
 import { updateCustomObjectWithDescription } from '../repository/Custom Object/updateCustomObjectWithDescription';
 import { fetchProductType } from '../repository/Product Type/fetchProductType';
+import { translateProductDescription } from '../services/Generative AI/translateProductDescription';
 
 export const post = async (request: Request, response: Response) => {
     try {
@@ -67,14 +68,23 @@ export const post = async (request: Request, response: Response) => {
             logger.info('✅ Sending product image to Vision AI.');
             const imageData = await productAnalysis(imageUrl);
 
-            logger.info('✅ Sending image data to Generative AI.');
-            const description = await generateProductDescription(imageData, productTypeKey);
+            logger.info('✅ Sending image data to Generative AI for generating descriptions.');
+            const generatedDescription = await generateProductDescription(imageData, productName, productTypeKey);
+
+            logger.info('✅ Sending generatedDescription to Generative AI for translation.');
+            const translations = await translateProductDescription(generatedDescription);
 
             logger.info('✅ Creating custom object for product description.');
             await createProductCustomObject(productId, imageUrl, productName, productTypeKey);
 
             logger.info('✅ Updating custom object with generated description.');
-            await updateCustomObjectWithDescription(productId, productName, productTypeKey, imageUrl, description);
+            const translationsTyped: { en: string; "en-US": string; "en-GB": string; "de-DE": string } = translations as {
+                en: string;
+                "en-US": string;
+                "en-GB": string;
+                "de-DE": string;
+            };
+            await updateCustomObjectWithDescription(productId, productName, imageUrl, translationsTyped, productTypeKey);
 
             logger.info('✅ Process completed successfully.');
             logger.info('⌛ Waiting for next event message.');
@@ -84,7 +94,7 @@ export const post = async (request: Request, response: Response) => {
                 productName,
                 imageUrl,
                 productType,
-                description,
+                translations,
                 productAnalysis: imageData,
             });
         }

@@ -12,7 +12,10 @@ export async function createProductCustomObject(productId: string, imageUrl: str
                 container: "temporaryDescription",
                 key: productId,
                 value: {
-                    temporaryDescription: null,
+                    temporaryDescription_en: null,
+                    temporaryDescription_en_US: null,
+                    temporaryDescription_en_GB: null,
+                    temporaryDescription_de_DE: null,
                     imageUrl: imageUrl,
                     productType,
                     productName: productName
