@@ -9,6 +9,7 @@ import { fetchProductType } from '../repository/product-type/fetchProductType';
 import { translateProductDescription } from '../services/generative-ai/translateProductDescription';
 
 export const post = async (request: Request, response: Response) => {
+    
     try {
         const pubSubMessage = request.body.message;
         const decodedData = pubSubMessage.data
