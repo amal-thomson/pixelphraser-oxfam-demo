@@ -6,11 +6,11 @@ const config = {
   cloudIdentifier: 'gcp-eu',
   env: {
     development: {
-      initialProjectKey: "${env:PROJECT_ID}"
+      initialProjectKey: "ayata-connectors"
     },
     production: {
-      applicationId: "${env:APPLICATION_ID}",
-      url: "https://pixelphraser.vercel.app",
+      applicationId: "${env:CUSTOM_APPLICATION_ID}",
+      url: "${env:APPLICATION_URL}",
     },
   },
   oAuthScopes: {
