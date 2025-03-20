@@ -33,24 +33,3 @@ deployAs:
         - key: GEMINI_MODEL
           description: GEMINI_MODEL version
           required: true
-  - name: mc-pixelphraser
-    applicationType: merchant-center-custom-application
-    configuration:
-      standardConfiguration:
-        - key: CUSTOM_APPLICATION_ID
-          description: The Custom Application ID
-          required: true
-        - key: CLOUD_IDENTIFIER
-          description: The cloud identifier
-          default: 'gcp-eu'
-        - key: ENTRY_POINT_URI_PATH
-          description: The Application entry point URI path
-          required: true
-        - key: ENABLE_NEW_JSX_TRANSFORM
-          description: Enables new JSX Transform
-          required: false
-          default: 'true'
-        - key: FAST_REFRESH
-          description: Enables Fast Refresh feature
-          required: false
-          default: 'true'
