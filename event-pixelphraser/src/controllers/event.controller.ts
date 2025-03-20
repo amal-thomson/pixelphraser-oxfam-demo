@@ -5,45 +5,52 @@ import { generateProductDescription } from '../services/generative-ai/descriptio
 import { ProductAttribute } from '../interfaces/productAttribute.interface';
 import { createProductCustomObject } from '../repository/custom-object/createCustomObject.repository';
 import { updateCustomObjectWithDescription } from '../repository/custom-object/updateCustomObjectWithDescription';
-import { fetchProductType } from '../repository/product-type/fetchProductType';
-import { translateProductDescription } from '../services/generative-ai/translateProductDescription';
+import { fetchProductType } from '../repository/product-type/fetchProductTypeById.repository';
+import { translateProductDescription } from '../services/generative-ai/translateProductDescription.service';
+import { fetchProduct } from '../repository/product/fetchProductByID.repository';
 
 export const post = async (request: Request, response: Response) => {
-    
+
     try {
         const pubSubMessage = request.body.message;
-        logger.info(pubSubMessage);
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
             : undefined;
-
-        logger.info(decodedData);
 
         if (!decodedData) {
             logger.error('❌ No data found in Pub/Sub message.');
             return response.status(400).send();
         }
 
-        const jsonData = JSON.parse(decodedData);
+        const messageData = JSON.parse(decodedData);
 
-        if (jsonData.resource?.typeId === 'product') {
+        if (messageData.typeId === 'product') {
             logger.info('✅ Event message received.');
             logger.info('✅ Processing event message.');
         }
 
-        const productId = jsonData.productProjection?.id;
-        const productType = jsonData.productProjection?.productType?.id;
-        const imageUrl = jsonData.productProjection?.masterVariant?.images?.[0]?.url;
-        const productName = jsonData.productProjection?.name?.en || 'Product Name Missing'; 
+        const productId = messageData.id;
+        logger.info("productId: " + productId);
+
+        const imageUrl = messageData.image?.url;
+        logger.info("imageUrl: " + imageUrl);
+
+        const productData = await fetchProduct(productId);
+        
+        const productType = productData.productType.id;
+        logger.info("productType: " + productType);
+        const productName = productData?.masterData.current.name.en;
+        logger.info("productName: " + productName);
 
         if (productId && imageUrl && productName) {
-            const attributes: ProductAttribute[] = jsonData.productProjection?.masterVariant?.attributes || [];
-            
+
+            const attributes: ProductAttribute[] = productData.masterData?.staged?.masterVariant?.attributes || [];
+
             if (!attributes || attributes.length === 0) {
                 logger.error('❌ No attributes found in the product data.');
                 return response.status(400).send();
             }
-            
+
             const genDescriptionAttr = attributes.find(attr => attr.name === 'generateDescription');
             if (!genDescriptionAttr) {
                 logger.error('❌ The attribute "generateDescription" is missing.', { productId, imageUrl });
@@ -95,7 +102,7 @@ export const post = async (request: Request, response: Response) => {
 
             return response.status(200).send();
         }
-        
+
     } catch (error) {
         if (error instanceof Error) {
             logger.error('❌ Error processing request', { error: error.message });
