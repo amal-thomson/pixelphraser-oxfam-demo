@@ -45,7 +45,6 @@ export const post = async (request: Request, response: Response) => {
         // Extract product type, name and id from product data
         const productType = productData.productType.id;
         const productName = productData?.masterData.current.name.en;
-        const generateDescription = messageData?.variant?.attributes?.find(attr => attr.name === 'generateDescription')?.value;
         logger.info(`Product Name: ${productName}, Product Type: ${productType}`);
 
         // Check if product ID, image URL, product name and product type are available
