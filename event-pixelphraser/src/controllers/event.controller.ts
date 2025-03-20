@@ -16,6 +16,7 @@ export const post = async (request: Request, response: Response) => {
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
             : undefined;
+        logger.info("PubSub Message Received:", pubSubMessage);
 
         if (!decodedData) {
             logger.error('🚫No data found in Pub/Sub message.');
@@ -23,6 +24,7 @@ export const post = async (request: Request, response: Response) => {
         }
 
         const messageData = JSON.parse(decodedData);
+        logger.info('Message Data:', messageData);
         if (messageData.typeId === 'product') {
             logger.info('✅Event message received.', messageData);
             logger.info('⌛Processing event message.');
