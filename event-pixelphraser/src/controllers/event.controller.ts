@@ -12,9 +12,12 @@ export const post = async (request: Request, response: Response) => {
     
     try {
         const pubSubMessage = request.body.message;
+        logger.info(pubSubMessage);
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
             : undefined;
+
+        logger.info(decodedData);
 
         if (!decodedData) {
             logger.error('❌ No data found in Pub/Sub message.');
