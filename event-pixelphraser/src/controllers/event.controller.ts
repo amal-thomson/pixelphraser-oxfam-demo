@@ -38,6 +38,7 @@ export const post = async (request: Request, response: Response) => {
         // Extract product ID and image URL from message data
         const productId = messageData.resource.id;
         const imageUrl = messageData?.variant?.images?.[0]?.url;
+        const productName = messageData?.variant?.images?.[0]?.label;
 
         if (!imageUrl) {
             logger.error('🚫Image URL is missing or null.', { productId });
@@ -47,10 +48,10 @@ export const post = async (request: Request, response: Response) => {
 
         // Fetch product data
         const productData = await fetchProduct(productId);
-
+        // logger.info('Product Data:', productData);
         // Extract product type, name and id from product data
         const productType = productData.productType.id;
-        const productName = productData?.masterData.current.name.en;
+        
         logger.info(`Product Name: ${productName}, Product Type: ${productType}`);
         
         // Check if product ID, image URL, product name and product type are available
