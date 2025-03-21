@@ -31,13 +31,18 @@ export const post = async (request: Request, response: Response) => {
             logger.info(`✅Event message received, Event Type: ${eventType}`);
             logger.info('⌛Processing event message.');
         } else {
-            logger.error('🚫Invalid event type received:', eventType);
+            logger.error(`🚫Invalid event type received, Event Type: ${eventType}`);
             return response.status(400).send();
         }
 
         // Extract product ID and image URL from message data
         const productId = messageData.resource.id;
         const imageUrl = messageData?.variant?.images?.[0]?.url;
+
+        if (!imageUrl) {
+            logger.error('🚫Image URL is missing or null.', { productId });
+            return response.status(400).send();
+        }
         logger.info(`Product Id: ${productId}, Image Url: ${imageUrl}`);
 
         // Fetch product data
