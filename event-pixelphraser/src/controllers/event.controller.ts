@@ -12,7 +12,7 @@ import { fetchProduct } from '../repository/product/fetchProductByID.repository'
 export const post = async (request: Request, response: Response) => {
     try {
         const pubSubMessage = request.body.message;
-        // logger.info('✅Pub/Sub message received.', pubSubMessage);
+        logger.info('✅Pub/Sub message received.', pubSubMessage);
 
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
@@ -24,8 +24,8 @@ export const post = async (request: Request, response: Response) => {
         }
 
         const messageData = JSON.parse(decodedData);
-
-        // logger.info('✅Parsed JSON data from Pub/Sub message.', messageData);
+        logger.info('✅Parsed JSON data from Pub/Sub message.', messageData);
+        
         const eventType = messageData?.type;
         if (eventType === 'ProductVariantAdded') {
             logger.info(`✅Event message received, Event Type: ${eventType}`);
