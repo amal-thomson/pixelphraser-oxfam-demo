@@ -10,28 +10,29 @@ import { translateProductDescription } from '../services/generative-ai/translate
 import { fetchProduct } from '../repository/product/fetchProductByID.repository';
 
 export const post = async (request: Request, response: Response) => {
-
     try {
-
         const pubSubMessage = request.body.message;
-        // logger.info('✅ Pub/Sub message received.', pubSubMessage);
+        // logger.info('✅Pub/Sub message received.', pubSubMessage);
 
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
             : undefined;
 
         if (!decodedData) {
-            logger.error('❌ No data found in Pub/Sub message.');
+            logger.error('🚫No data found in Pub/Sub message.');
             return response.status(400).send();
         }
 
-        const jsonData = JSON.parse(decodedData);
         const messageData = JSON.parse(decodedData);
-        // logger.info('✅ Parsed JSON data from Pub/Sub message.', jsonData);
 
-        if (messageData.typeId === 'product') {
-            // logger.info('✅Event message received.', messageData);
+        // logger.info('✅Parsed JSON data from Pub/Sub message.', messageData);
+        const eventType = messageData?.type;
+        if (eventType === 'ProductVariantAdded') {
+            logger.info(`✅Event message received, Event Type: ${eventType}`);
             logger.info('⌛Processing event message.');
+        } else {
+            logger.error('🚫Invalid event type received:', eventType);
+            return response.status(400).send();
         }
 
         // Extract product ID and image URL from message data
@@ -46,10 +47,9 @@ export const post = async (request: Request, response: Response) => {
         const productType = productData.productType.id;
         const productName = productData?.masterData.current.name.en;
         logger.info(`Product Name: ${productName}, Product Type: ${productType}`);
-
+        
         // Check if product ID, image URL, product name and product type are available
         if (productId && imageUrl && productName && productType) {
-
             const attributes: ProductAttribute[] = productData.masterData?.staged?.masterVariant?.attributes || [];
             // Check if attributes are available
             if (!attributes || attributes.length === 0) {
@@ -68,7 +68,6 @@ export const post = async (request: Request, response: Response) => {
                 logger.info('🚫The option for automatic description generation is not enabled.', { productId, imageUrl });
                 return response.status(200).send();
             }
-
             // Fetch product type key
             const productTypeKey = await fetchProductType(productType);
             if (!productTypeKey) {
@@ -87,12 +86,15 @@ export const post = async (request: Request, response: Response) => {
             // Generate product description
             logger.info('⌛Sending image data to Generative AI for generating descriptions.');
             const generatedDescription = await generateProductDescription(imageData, productName, productTypeKey);
+            
             // Translate generated description
             logger.info('⌛Sending generatedDescription to Generative AI for translation.');
             const translations = await translateProductDescription(generatedDescription);
+            
             // Create custom object for product description
             logger.info('⌛Creating custom object for product description.');
             await createProductCustomObject(productId, imageUrl, productName, productTypeKey);
+            
             // Update custom object with generated description
             logger.info('⌛Updating custom object with generated description.');
             const translationsTyped: { "en-US": string; "en-GB": string; "de-DE": string } = translations as {
@@ -100,10 +102,10 @@ export const post = async (request: Request, response: Response) => {
                 "en-GB": string;
                 "de-DE": string;
             };
+            
             await updateCustomObjectWithDescription(productId, productName, imageUrl, translationsTyped, productTypeKey);
-
             logger.info('⌛Waiting for next event message.');
-
+            
             return response.status(200).send();
         }
 
