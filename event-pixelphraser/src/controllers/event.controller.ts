@@ -12,7 +12,7 @@ import { fetchProduct } from '../repository/product/fetchProductByID.repository'
 export const post = async (request: Request, response: Response) => {
     try {
         const pubSubMessage = request.body.message;
-        logger.info('✅Pub/Sub message received.', pubSubMessage);
+        logger.info('✅Message Received:', pubSubMessage);
 
         const decodedData = pubSubMessage.data
             ? Buffer.from(pubSubMessage.data, 'base64').toString().trim()
@@ -20,19 +20,19 @@ export const post = async (request: Request, response: Response) => {
 
         if (!decodedData) {
             logger.error('🚫No data found in Pub/Sub message.');
-            return response.status(400).send();
+            return response.status(200).send();
         }
 
         const messageData = JSON.parse(decodedData);
-        logger.info('✅Parsed JSON data from Pub/Sub message.', messageData);
-        
+        logger.info('✅Decoded Data:', messageData);
+
         const eventType = messageData?.type;
         if (eventType === 'ProductVariantAdded') {
             logger.info(`✅Event message received, Event Type: ${eventType}`);
             logger.info('⌛Processing event message.');
         } else {
             logger.error(`🚫Invalid event type received, Event Type: ${eventType}`);
-            return response.status(400).send();
+            return response.status(200).send();
         }
 
         // Extract product ID and image URL from message data
@@ -41,7 +41,7 @@ export const post = async (request: Request, response: Response) => {
 
         if (!imageUrl) {
             logger.error('🚫Image URL is missing or null.', { productId });
-            return response.status(400).send();
+            return response.status(200).send();
         }
         logger.info(`Product Id: ${productId}, Image Url: ${imageUrl}`);
 
@@ -59,13 +59,13 @@ export const post = async (request: Request, response: Response) => {
             // Check if attributes are available
             if (!attributes || attributes.length === 0) {
                 logger.error('🚫No attributes found in the product data.');
-                return response.status(400).send();
+                return response.status(200).send();
             }
             // Check if generateDescription attribute is available
             const genDescriptionAttr = attributes.find(attr => attr.name === 'generateDescription');
             if (!genDescriptionAttr) {
                 logger.error('🚫The attribute "generateDescription" is missing.', { productId, imageUrl });
-                return response.status(400).send();
+                return response.status(200).send();
             }
             // Check if generateDescription attribute is enabled
             const isGenerateDescriptionEnabled = Boolean(genDescriptionAttr?.value);
