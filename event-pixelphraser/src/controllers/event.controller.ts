@@ -112,7 +112,7 @@ export const post = async (request: Request, response: Response) => {
             await updateCustomObjectWithDescription(productId, productName, imageUrl, translationsTyped, productTypeKey);
             logger.info('⌛Waiting for next event message.');
             
-            return response.status(200).send();
+            return;
         }
 
     } catch (error) {
